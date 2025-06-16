@@ -241,7 +241,7 @@ def about():
 @app.route('/sample')
 def download_sample():
     """Download sample CSV file"""
-    sample_path = os.path.join(os.getcwd(), 'sample/sample_tournament.csv')
+    sample_path = os.path.join(os.getcwd(), 'samples/sample_tournament.csv')
     return send_file(
         sample_path,
         as_attachment=True,
@@ -253,11 +253,11 @@ def download_sample():
 @app.route('/sample-small')
 def download_sample_small():
     """Download small sample CSV file for quick testing"""
-    sample_path = os.path.join(os.getcwd(), 'sample/sample_small.csv')
+    sample_path = os.path.join(os.getcwd(), 'samples/sample_small.csv')
     return send_file(
         sample_path,
         as_attachment=True,
-        download_name='sample/sample_small.csv',
+        download_name='sample_small.csv',
         mimetype='text/csv'
     )
 

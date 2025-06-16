@@ -79,14 +79,16 @@ Players will be automatically sorted by rating (highest to lowest) and rankings 
 
 To test the application immediately:
 
-1. **Download the sample file**: Visit the web app and click "Download Sample CSV" or use the file `sample_tournament.csv`
+1. **Download the sample file**: Visit the web app and click "Download Sample CSV" - choose either:
+   - **Sample (10 players)** - `sample_small.csv` with mixed sections
+   - **Full Sample (20 players)** - `sample_tournament.csv` with Crown section players
 2. **Upload it**: Use the sample file to test the web application
 3. **See the results**: The sample contains real CFC IDs that will demonstrate the rating lookup functionality
 
-The sample file includes:
-- 60 tournament players with various rating levels
-- Mix of different sections (Crown, U1800, U1400)
-- Examples of players with and without CFC memberships
+The sample files include:
+- **sample_small.csv**: 10 players with Crown, U1800, and U1400 sections, including unrated players
+- **sample_tournament.csv**: 20 tournament players from Crown section
+- Examples of players with and without CFC memberships (marked as N/A)
 - Real CFC IDs for testing the API integration
 
 ## Deployment Options
