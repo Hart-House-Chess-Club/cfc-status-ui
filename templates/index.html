@@ -1,227 +1,227 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CFC Rating Processor</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 4rem 0;
-        }
-        .upload-section {
-            padding: 3rem 0;
-        }
-        .feature-card {
-            transition: transform 0.3s ease;
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        .drag-area {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        .drag-area.drag-over {
-            border-color: #007bff;
-            background-color: #f8f9fa;
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-chess"></i> CFC Rating Processor
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ url_for('index') }}">Home</a>
-                <a class="nav-link" href="{{ url_for('about') }}">About</a>
+{% extends "base.html" %}
+
+{% block title %}CFC Rating Processor - ChessTools{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden bg-gradient-to-b from-primary/10 to-background py-20">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
+                    CFC <span class="text-primary">Rating Processor</span>
+                </h1>
+                <p class="text-xl mb-8 text-muted-foreground max-w-3xl mx-auto">
+                    Upload your tournament CSV file and automatically fetch current CFC ratings, 
+                    membership status, and FIDE information for all players.
+                </p>
             </div>
         </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <div class="hero-section">
-        <div class="container text-center">
-            <h1 class="display-4 mb-4">
-                <i class="fas fa-chess-king"></i> CFC Rating Processor
-            </h1>
-            <p class="lead">Upload your tournament CSV file and automatically fetch current CFC ratings, membership status, and FIDE information for all players.</p>
-        </div>
-    </div>
+    </section>
 
     <!-- Upload Section -->
-    <div class="upload-section">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="card shadow">
-                        <div class="card-header bg-primary text-white">
-                            <h3 class="card-title mb-0">
-                                <i class="fas fa-upload"></i> Upload Tournament File
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <!-- Flash Messages -->
-                            {% with messages = get_flashed_messages() %}
-                                {% if messages %}
-                                    {% for message in messages %}
-                                        <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                            {{ message }}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                        </div>
-                                    {% endfor %}
-                                {% endif %}
-                            {% endwith %}
+    <section class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                <!-- Upload Form -->
+                <div class="bg-card border border-border rounded-lg shadow-lg">
+                    <div class="bg-primary text-primary-foreground px-6 py-4 rounded-t-lg">
+                        <h3 class="text-lg font-semibold flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Upload Tournament File
+                        </h3>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Flash Messages -->
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-md mb-4 flex items-start gap-2">
+                                        <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <span>{{ message }}</span>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
 
-                            <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="uploadForm">
-                                <!-- Sample File Download -->
-                                <div class="mb-4 text-center">
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle"></i> 
-                                        <strong>New to this tool?</strong> Download a sample CSV file to test the application.
-                                        <br>
-                                        <div class="mt-2">
-                                            <a href="{{ url_for('download_sample_small') }}" class="btn btn-sm btn-outline-primary me-2">
-                                                <i class="fas fa-download"></i> Sample (10 players)
+                        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="uploadForm" class="space-y-6">
+                            <!-- Sample Files Section -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <p class="font-medium text-blue-800 mb-2">New to this tool? Download a sample CSV file to test the application.</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <a href="{{ url_for('download_sample_small') }}" 
+                                               class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                                Sample (10 players)
                                             </a>
-                                            <a href="{{ url_for('download_sample') }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-download"></i> Full Sample (60 players)
+                                            <a href="{{ url_for('download_sample') }}" 
+                                               class="inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-blue-300 text-blue-800 rounded-md hover:bg-blue-50 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                                Full Sample (60 players)
                                             </a>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- File Upload Area -->
-                                <div class="mb-4">
-                                    <label for="file" class="form-label fw-bold">Tournament CSV File</label>
-                                    <div class="drag-area" id="dragArea">
-                                        <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
-                                        <p class="mb-3">Drag and drop your CSV file here or click to browse</p>
-                                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required style="display: none;">
-                                        <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('file').click()">
-                                            <i class="fas fa-folder-open"></i> Choose File
-                                        </button>
-                                    </div>
-                                    <div id="fileInfo" class="mt-2 text-muted" style="display: none;"></div>
-                                </div>
-
-                                <!-- Configuration Options -->
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="event_date" class="form-label fw-bold">Event Date</label>
-                                            <input type="date" class="form-control" id="event_date" name="event_date">
-                                            <div class="form-text">Used to check CFC membership expiry</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="cfc_id_column" class="form-label fw-bold">CFC ID Column Index</label>
-                                            <input type="number" class="form-control" id="cfc_id_column" name="cfc_id_column" value="2" min="0">
-                                            <div class="form-text">Column index where CFC IDs are located (0-based)</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Submit Button -->
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                                        <i class="fas fa-cogs"></i> Process File
+                            <!-- File Upload Area -->
+                            <div>
+                                <label for="file" class="block text-sm font-medium mb-2">Tournament CSV File</label>
+                                <div class="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                                     id="dragArea"
+                                     onclick="document.getElementById('file').click()">
+                                    <svg class="w-12 h-12 text-muted-foreground mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    <p class="text-lg mb-2">Drag and drop your CSV file here</p>
+                                    <p class="text-muted-foreground mb-4">or click to browse</p>
+                                    <input type="file" class="hidden" id="file" name="file" accept=".csv" required>
+                                    <button type="button" 
+                                            class="inline-flex items-center gap-2 px-4 py-2 border border-input bg-background rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                                        </svg>
+                                        Choose File
                                     </button>
                                 </div>
-                            </form>
-                        </div>
+                                <div id="fileInfo" class="mt-2 text-sm text-muted-foreground hidden"></div>
+                            </div>
+
+                            <!-- Configuration Options -->
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="event_date" class="block text-sm font-medium mb-2">Event Date</label>
+                                    <input type="date" 
+                                           class="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-ring focus:border-ring" 
+                                           id="event_date" 
+                                           name="event_date">
+                                    <p class="text-sm text-muted-foreground mt-1">Used to check CFC membership expiry</p>
+                                </div>
+                                <div>
+                                    <label for="cfc_id_column" class="block text-sm font-medium mb-2">CFC ID Column Index</label>
+                                    <input type="number" 
+                                           class="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-ring focus:border-ring" 
+                                           id="cfc_id_column" 
+                                           name="cfc_id_column" 
+                                           value="2" 
+                                           min="0">
+                                    <p class="text-sm text-muted-foreground mt-1">Column index where CFC IDs are located (0-based)</p>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div>
+                                <button type="submit" 
+                                        class="w-full bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2" 
+                                        id="submitBtn">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Process File
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     {% if headers and rows %}
-    <div class="mt-5">
-        <h3 class="text-center">Processed CSV Preview</h3>
-        <div class="text-end mb-3">
-            <a href="{{ download_url }}" class="btn btn-success">
-                <i class="fas fa-download"></i> Download Processed CSV
-            </a>
+    <section class="py-16 bg-muted/50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Processed CSV Preview</h3>
+                    <a href="{{ download_url }}" 
+                       class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Download Processed CSV
+                    </a>
+                </div>
+                <div class="bg-card border border-border rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-muted">
+                                <tr>
+                                    {% for head in headers %}
+                                        <th class="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{{ head }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in rows %}
+                                    <tr class="border-b border-border">
+                                        {% for cell in row %}
+                                            <td class="px-4 py-3 text-sm">{{ cell }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="table-light">
-                    <tr>
-                        {% for head in headers %}
-                            <th>{{ head }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in rows %}
-                        <tr>
-                            {% for cell in row %}
-                                <td>{{ cell }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+    </section>
     {% endif %}
 
-
     <!-- Features Section -->
-    <div class="container mb-5">
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 feature-card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-star fa-3x text-warning mb-3"></i>
-                        <h5 class="card-title">Automatic Rating Lookup</h5>
-                        <p class="card-text">Fetches current CFC quick ratings for all players automatically from the official CFC database.</p>
+    <section class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-12">Key Features</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition-shadow">
+                        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-3">Automatic Rating Lookup</h3>
+                        <p class="text-muted-foreground">Fetches current CFC quick ratings for all players automatically from the official CFC database.</p>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 feature-card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-id-card fa-3x text-success mb-3"></i>
-                        <h5 class="card-title">Membership Validation</h5>
-                        <p class="card-text">Checks CFC membership status and expiry dates to ensure players are eligible for rated play.</p>
+                    
+                    <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition-shadow">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-3">Membership Validation</h3>
+                        <p class="text-muted-foreground">Checks CFC membership status and expiry dates to ensure players are eligible for rated play.</p>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 feature-card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-sort-numeric-down fa-3x text-info mb-3"></i>
-                        <h5 class="card-title">Automatic Ranking</h5>
-                        <p class="card-text">Sorts players by rating and updates rankings automatically in the output file.</p>
+                    
+                    <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition-shadow">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-3">Automatic Ranking</h3>
+                        <p class="text-muted-foreground">Sorts players by rating and updates rankings automatically in the output file.</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3">
-        <div class="container">
-            <p class="mb-0">&copy; 2025 CFC Rating Processor. Built for Canadian chess tournaments.</p>
-        </div>
-    </footer>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Custom JavaScript -->
     <script>
         // Set today's date as default
         document.getElementById('event_date').value = new Date().toISOString().split('T')[0];
@@ -244,6 +244,62 @@
         });
 
         ['dragleave', 'drop'].forEach(eventName => {
+            dragArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        // Handle dropped files
+        dragArea.addEventListener('drop', handleDrop, false);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            dragArea.classList.add('border-primary', 'bg-primary/5');
+        }
+
+        function unhighlight(e) {
+            dragArea.classList.remove('border-primary', 'bg-primary/5');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFileInfo(files[0]);
+            }
+        }
+
+        // Update file info when file is selected
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                updateFileInfo(this.files[0]);
+            }
+        });
+
+        function updateFileInfo(file) {
+            fileInfo.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            fileInfo.classList.remove('hidden');
+        }
+
+        // Form submission handling
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                </svg>
+                Processing...
+            `;
+            submitBtn.disabled = true;
+        });
+    </script>
+{% endblock %}
             dragArea.addEventListener(eventName, unhighlight, false);
         });
 
