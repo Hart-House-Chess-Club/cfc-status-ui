@@ -146,6 +146,38 @@
         </div>
     </div>
 
+    {% if headers and rows %}
+    <div class="mt-5">
+        <h3 class="text-center">Processed CSV Preview</h3>
+        <div class="text-end mb-3">
+            <a href="{{ download_url }}" class="btn btn-success">
+                <i class="fas fa-download"></i> Download Processed CSV
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        {% for head in headers %}
+                            <th>{{ head }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            {% for cell in row %}
+                                <td>{{ cell }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+
     <!-- Features Section -->
     <div class="container mb-5">
         <div class="row">

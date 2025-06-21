@@ -166,10 +166,19 @@ def index():
     """Main page with file upload form"""
     return render_template('index.html')
 
+@app.route('/download/<filename>')
+def download_file(filename):
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    return send_file(
+        file_path,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='text/csv'
+    )
+    
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """Handle file upload and processing"""
     if 'file' not in request.files:
         flash('No file selected')
         return redirect(request.url)
@@ -180,50 +189,39 @@ def upload_file():
         return redirect(request.url)
     
     if file and allowed_file(file.filename):
-        # Get form data
         event_date_str = request.form.get('event_date')
         cfc_id_column = int(request.form.get('cfc_id_column', DEFAULT_CFC_ID_COLUMN))
         
         try:
-            # Parse event date
-            if event_date_str:
-                event_date = datetime.strptime(event_date_str, '%Y-%m-%d')
-            else:
-                event_date = datetime.now()
-            
-            # Save uploaded file
+            event_date = datetime.strptime(event_date_str, '%Y-%m-%d') if event_date_str else datetime.now()
             filename = secure_filename(file.filename)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f"{timestamp}_{filename}"
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
-            
-            # Process the file
+
             flash('Processing your file... This may take a few minutes.')
             header, processed_data = process_csv_file(file_path, event_date, cfc_id_column)
-            
-            # Check if file has too many players
+
             if len(processed_data) > MAX_PLAYERS_PER_FILE:
                 flash(f'File too large! Maximum {MAX_PLAYERS_PER_FILE} players allowed. Your file has {len(processed_data)} players.')
                 os.remove(file_path)
                 return redirect(url_for('index'))
-            
-            # Create output file
+
             output_filename = f"processed_{filename}"
             output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
             write_to_file(output_path, header, processed_data)
-            
-            # Clean up input file
+
             os.remove(file_path)
-            
+
             flash(f'File processed successfully! {len(processed_data)} players processed.')
-            return send_file(
-                output_path,
-                as_attachment=True,
-                download_name=f"updated_{file.filename}",
-                mimetype='text/csv'
+            return render_template(
+                'index.html',
+                headers=header,
+                rows=processed_data,
+                download_url=url_for('download_file', filename=output_filename)
             )
-            
+
         except Exception as e:
             flash(f'Error processing file: {str(e)}')
             return redirect(url_for('index'))
