@@ -122,6 +122,88 @@
                                 </div>
                             </div>
 
+                            <!-- Data Selection Options -->
+                            <div class="border border-border rounded-lg p-4">
+                                <h4 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                    </svg>
+                                    Data Options
+                                </h4>
+                                
+                                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                                    <div class="space-y-3">
+                                        <h5 class="font-medium text-sm text-muted-foreground uppercase tracking-wide">Include Ratings</h5>
+                                        
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" 
+                                                   name="include_regular" 
+                                                   class="rounded border-border text-primary focus:ring-primary" 
+                                                   {% if not options or options.include_regular %}checked{% endif %}>
+                                            <span class="text-sm">CFC Regular Rating</span>
+                                        </label>
+                                        
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" 
+                                                   name="include_quick" 
+                                                   class="rounded border-border text-primary focus:ring-primary" 
+                                                   {% if not options or options.include_quick %}checked{% endif %}>
+                                            <span class="text-sm">CFC Active Rating (Quick/Blitz)</span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="space-y-3">
+                                        <h5 class="font-medium text-sm text-muted-foreground uppercase tracking-wide">Include Information</h5>
+                                        
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" 
+                                                   name="include_membership" 
+                                                   class="rounded border-border text-primary focus:ring-primary" 
+                                                   {% if not options or options.include_membership %}checked{% endif %}>
+                                            <span class="text-sm">CFC Membership Status</span>
+                                        </label>
+                                        
+                                        <label class="flex items-center gap-2 cursor-pointer ml-6">
+                                            <input type="checkbox" 
+                                                   name="include_expiry_date" 
+                                                   class="rounded border-border text-primary focus:ring-primary" 
+                                                   {% if options and options.include_expiry_date %}checked{% endif %}>
+                                            <span class="text-sm text-muted-foreground">Show actual expiry date</span>
+                                        </label>
+                                        
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" 
+                                                   name="include_fide_id" 
+                                                   class="rounded border-border text-primary focus:ring-primary" 
+                                                   {% if not options or options.include_fide_id %}checked{% endif %}>
+                                            <span class="text-sm">FIDE ID</span>
+                                        </label>
+                                        
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" 
+                                                   name="include_names" 
+                                                   class="rounded border-border text-primary focus:ring-primary" 
+                                                   {% if not options or options.include_names %}checked{% endif %}>
+                                            <span class="text-sm">First & Last Names</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="sort_by" class="block text-sm font-medium mb-2">Sort Results By</label>
+                                    <select name="sort_by" 
+                                            id="sort_by" 
+                                            class="w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-ring focus:border-ring">
+                                        <option value="regular" {% if options and options.sort_by == 'regular' %}selected{% endif %}>Regular Rating (Highest First)</option>
+                                        <option value="quick" {% if options and options.sort_by == 'quick' %}selected{% endif %}>Active Rating (Highest First)</option>
+                                        <option value="combined" {% if options and options.sort_by == 'combined' %}selected{% endif %}>Combined Ratings (Regular Priority)</option>
+                                        <option value="name" {% if options and options.sort_by == 'name' %}selected{% endif %}>Last Name (A-Z)</option>
+                                        <option value="none" {% if options and options.sort_by == 'none' %}selected{% endif %}>Original Order (No Sorting)</option>
+                                    </select>
+                                    <p class="text-sm text-muted-foreground mt-1">Choose how to sort the processed results</p>
+                                </div>
+                            </div>
+
                             <!-- Submit Button -->
                             <div>
                                 <button type="submit" 
@@ -298,6 +380,28 @@
             `;
             submitBtn.disabled = true;
         });
+
+        // Handle membership checkbox dependency
+        const membershipCheckbox = document.querySelector('input[name="include_membership"]');
+        const expiryDateCheckbox = document.querySelector('input[name="include_expiry_date"]');
+        const expiryDateLabel = expiryDateCheckbox.closest('label');
+        
+        function updateExpiryDateAvailability() {
+            if (!membershipCheckbox.checked) {
+                expiryDateCheckbox.checked = false;
+                expiryDateCheckbox.disabled = true;
+                expiryDateLabel.style.opacity = '0.5';
+            } else {
+                expiryDateCheckbox.disabled = false;
+                expiryDateLabel.style.opacity = '1';
+            }
+        }
+        
+        // Initial state
+        updateExpiryDateAvailability();
+        
+        // Listen for changes
+        membershipCheckbox.addEventListener('change', updateExpiryDateAvailability);
     </script>
 {% endblock %}
             dragArea.addEventListener(eventName, unhighlight, false);

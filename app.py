@@ -56,8 +56,19 @@ def get_profile(cfcid):
         return None
 
 
-def process_csv_file(file_path, event_date, cfc_id_index=2):
-    """Process the uploaded CSV file and add ratings"""
+def process_csv_file(file_path, event_date, cfc_id_index=2, options=None):
+    """Process the uploaded CSV file and add ratings based on user options"""
+    if options is None:
+        options = {
+            'include_regular': True,
+            'include_quick': True,
+            'include_membership': True,
+            'include_expiry_date': False,
+            'include_fide_id': True,
+            'include_names': True,
+            'sort_by': 'regular'  # regular, quick, name, none
+        }
+    
     id_list = []
     new_csv_rows = []
     
@@ -73,8 +84,24 @@ def process_csv_file(file_path, event_date, cfc_id_index=2):
             
             if cfc_id != '':  # if the id is not empty
                 if cfc_id.lower() == "na" or cfc_id.lower() == "n/a":
-                    data_to_write.append("0")
-                    data_to_write += ["", "", ""] + row[cfc_id_index + 1:] if len(row) > cfc_id_index + 1 else ["", "", ""]
+                    # Add empty values based on selected options
+                    if options['include_regular']:
+                        data_to_write.append("0")
+                    if options['include_quick']:
+                        data_to_write.append("0")
+                    if options['include_membership']:
+                        data_to_write.append("")
+                        if options['include_expiry_date']:
+                            data_to_write.append("")
+                    if options['include_fide_id']:
+                        data_to_write.append("")
+                    if options['include_names']:
+                        data_to_write.extend(["", ""])
+                    
+                    # Add remaining columns from original row
+                    if len(row) > cfc_id_index + 1:
+                        data_to_write += row[cfc_id_index + 1:]
+                    
                     new_csv_rows.append(data_to_write)
                     continue
 
@@ -84,72 +111,212 @@ def process_csv_file(file_path, event_date, cfc_id_index=2):
 
                 profile = get_profile(cfc_id)
                 
-                if profile is None or profile.get("player", {}).get("events") == []:
-                    data_to_write.append("0")
-                    data_to_write += ["", "", ""] + row[cfc_id_index + 1:] if len(row) > cfc_id_index + 1 else ["", "", ""]
+                if profile is None:
+                    # Profile not found - add empty values for all options
+                    if options['include_regular']:
+                        data_to_write.append("0")
+                    if options['include_quick']:
+                        data_to_write.append("0")
+                    if options['include_membership']:
+                        data_to_write.append("")
+                        if options['include_expiry_date']:
+                            data_to_write.append("")
+                    if options['include_fide_id']:
+                        data_to_write.append("")
+                    if options['include_names']:
+                        data_to_write.extend(["", ""])
+                        
+                    # Add remaining columns from original row
+                    if len(row) > cfc_id_index + 1:
+                        data_to_write += row[cfc_id_index + 1:]
+                    
+                    new_csv_rows.append(data_to_write)
+                    continue
+                elif profile.get("player", {}).get("events") == []:
+                    # Profile found but no events - still get available info like names
+                    if options['include_regular']:
+                        data_to_write.append("0")
+                    if options['include_quick']:
+                        data_to_write.append("0")
+                    if options['include_membership']:
+                        # Check membership even if no events
+                        cfc_expiry = profile["player"].get("cfc_expiry", "")
+                        if not cfc_expiry.strip():
+                            data_to_write.append("NA")
+                            if options['include_expiry_date']:
+                                data_to_write.append("")
+                        else:
+                            try:
+                                expiry_date = datetime.strptime(cfc_expiry, '%Y-%m-%d')
+                                if expiry_date < event_date:
+                                    data_to_write.append("Expired")
+                                else:
+                                    data_to_write.append("Valid")
+                                
+                                # Add actual expiry date if requested
+                                if options['include_expiry_date']:
+                                    data_to_write.append(cfc_expiry)
+                            except ValueError:
+                                data_to_write.append("NA")
+                                if options['include_expiry_date']:
+                                    data_to_write.append("")
+                    if options['include_fide_id']:
+                        data_to_write.append(profile["player"].get("fide_id", ""))
+                    if options['include_names']:
+                        data_to_write.append(profile["player"].get("name_first", ""))
+                        data_to_write.append(profile["player"].get("name_last", ""))
+                        
+                    # Add remaining columns from original row
+                    if len(row) > cfc_id_index + 1:
+                        data_to_write += row[cfc_id_index + 1:]
+                    
                     new_csv_rows.append(data_to_write)
                     continue
                 else:
-                    # Use quick_rating (for rapid/blitz) or regular_rating (for standard)
-                    rating = profile["player"].get("quick_rating", 0)
-                    data_to_write.append(rating)
+                    # Add ratings based on user selection
+                    if options['include_regular']:
+                        regular_rating = profile["player"].get("regular_rating", 0)
+                        data_to_write.append(regular_rating)
+                    if options['include_quick']:
+                        quick_rating = profile["player"].get("quick_rating", 0)
+                        data_to_write.append(quick_rating)
 
-                # Check CFC membership expiry
-                cfc_expiry = profile["player"].get("cfc_expiry", "")
-                if not cfc_expiry.strip():
-                    data_to_write.append("NA")
-                else:
-                    try:
-                        expiry_date = datetime.strptime(cfc_expiry, '%Y-%m-%d')
-                        if expiry_date < event_date:
-                            data_to_write.append("Expired")
-                        else:
-                            data_to_write.append("Valid")
-                    except ValueError:
+                # Check CFC membership expiry (if requested)
+                if options['include_membership']:
+                    cfc_expiry = profile["player"].get("cfc_expiry", "")
+                    if not cfc_expiry.strip():
                         data_to_write.append("NA")
+                        if options['include_expiry_date']:
+                            data_to_write.append("")
+                    else:
+                        try:
+                            expiry_date = datetime.strptime(cfc_expiry, '%Y-%m-%d')
+                            if expiry_date < event_date:
+                                data_to_write.append("Expired")
+                            else:
+                                data_to_write.append("Valid")
+                            
+                            # Add actual expiry date if requested
+                            if options['include_expiry_date']:
+                                data_to_write.append(cfc_expiry)
+                        except ValueError:
+                            data_to_write.append("NA")
+                            if options['include_expiry_date']:
+                                data_to_write.append("")
 
-                # Add additional player information
-                data_to_write.append(profile["player"].get("fide_id", ""))
-                data_to_write.append(profile["player"].get("name_first", ""))
-                data_to_write.append(profile["player"].get("name_last", ""))
+                # Add additional player information based on options
+                if options['include_fide_id']:
+                    data_to_write.append(profile["player"].get("fide_id", ""))
+                if options['include_names']:
+                    data_to_write.append(profile["player"].get("name_first", ""))
+                    data_to_write.append(profile["player"].get("name_last", ""))
                 
                 # Add remaining columns from original row
-                if len(row) > cfc_id_index + 4:
-                    data_to_write += row[cfc_id_index + 4:]
+                if len(row) > cfc_id_index + 1:
+                    data_to_write += row[cfc_id_index + 1:]
 
                 new_csv_rows.append(data_to_write)
                 
                 # Add a small delay to be respectful to the API
                 time.sleep(API_RATE_LIMIT_DELAY)
 
-    # Create new header
-    new_header = header[0:cfc_id_index + 1] + ["CFC Rating", "CFC Membership", "FIDE ID", "First Name", "Last Name"]
-    if len(header) > cfc_id_index + 4:
-        new_header += header[cfc_id_index + 4:]
+    # Create new header based on selected options
+    new_header = header[0:cfc_id_index + 1]
+    column_index = cfc_id_index + 1
     
-    # Sort by rating
-    sorted_data = sort_by_rating(new_csv_rows, cfc_id_index + 1)
+    if options['include_regular']:
+        new_header.append("CFC Regular Rating")
+        regular_rating_index = column_index
+        column_index += 1
+    else:
+        regular_rating_index = None
+        
+    if options['include_quick']:
+        new_header.append("CFC Quick Rating")
+        quick_rating_index = column_index
+        column_index += 1
+    else:
+        quick_rating_index = None
+        
+    if options['include_membership']:
+        new_header.append("CFC Membership")
+        column_index += 1
+        if options['include_expiry_date']:
+            new_header.append("Expiry Date")
+            column_index += 1
+        
+    if options['include_fide_id']:
+        new_header.append("FIDE ID")
+        column_index += 1
+        
+    if options['include_names']:
+        new_header.extend(["First Name", "Last Name"])
+        name_index = column_index
+        column_index += 2
+    else:
+        name_index = None
+    
+    # Add remaining original columns
+    if len(header) > cfc_id_index + 1:
+        new_header += header[cfc_id_index + 1:]
+    
+    # Sort data based on user preference
+    sorted_data = sort_by_preference(new_csv_rows, options, regular_rating_index, quick_rating_index, name_index)
     
     return new_header, sorted_data
 
 
-def sort_by_rating(data, ratings_index):
-    """Sort data by ratings and update rankings"""
-    # Filter out non-numeric ratings for sorting
-    def get_rating(row):
-        try:
-            return int(row[ratings_index]) if row[ratings_index] and row[ratings_index] != "" else 0
-        except (ValueError, IndexError):
+def sort_by_preference(data, options, regular_rating_index=None, quick_rating_index=None, name_index=None):
+    """Sort data based on user preference and update rankings"""
+    
+    def get_sort_key(row):
+        if options['sort_by'] == 'regular' and regular_rating_index is not None:
+            try:
+                return int(row[regular_rating_index]) if row[regular_rating_index] and row[regular_rating_index] != "" else 0
+            except (ValueError, IndexError):
+                return 0
+        elif options['sort_by'] == 'quick' and quick_rating_index is not None:
+            try:
+                return int(row[quick_rating_index]) if row[quick_rating_index] and row[quick_rating_index] != "" else 0
+            except (ValueError, IndexError):
+                return 0
+        elif options['sort_by'] == 'name' and name_index is not None:
+            try:
+                # Sort by last name, then first name
+                last_name = row[name_index + 1] if len(row) > name_index + 1 else ""
+                first_name = row[name_index] if len(row) > name_index else ""
+                return (last_name.lower(), first_name.lower())
+            except IndexError:
+                return ("", "")
+        elif options['sort_by'] == 'combined' and regular_rating_index is not None and quick_rating_index is not None:
+            try:
+                regular = int(row[regular_rating_index]) if row[regular_rating_index] and row[regular_rating_index] != "" else 0
+                quick = int(row[quick_rating_index]) if row[quick_rating_index] and row[quick_rating_index] != "" else 0
+                return (regular, quick)
+            except (ValueError, IndexError):
+                return (0, 0)
+        else:
+            # No sorting - maintain original order
             return 0
     
-    data.sort(key=get_rating, reverse=True)
+    # Only sort if not 'none'
+    if options['sort_by'] != 'none':
+        reverse_sort = options['sort_by'] in ['regular', 'quick', 'combined']  # Ratings sort descending, names ascending
+        data.sort(key=get_sort_key, reverse=reverse_sort)
 
+    # Update rankings
     rankings_number = 1
     for line in data:
         line[0] = rankings_number  # assume that the first value is the rankings
         rankings_number += 1
 
     return data
+
+
+def sort_by_rating(data, regular_rating_index, quick_rating_index):
+    """Legacy function - kept for backwards compatibility"""
+    options = {'sort_by': 'combined'}
+    return sort_by_preference(data, options, regular_rating_index, quick_rating_index)
 
 
 def write_to_file(filename, header, contents):
@@ -192,6 +359,17 @@ def upload_file():
         event_date_str = request.form.get('event_date')
         cfc_id_column = int(request.form.get('cfc_id_column', DEFAULT_CFC_ID_COLUMN))
         
+        # Get user options from form
+        options = {
+            'include_regular': request.form.get('include_regular') == 'on',
+            'include_quick': request.form.get('include_quick') == 'on',
+            'include_membership': request.form.get('include_membership') == 'on',
+            'include_expiry_date': request.form.get('include_expiry_date') == 'on',
+            'include_fide_id': request.form.get('include_fide_id') == 'on',
+            'include_names': request.form.get('include_names') == 'on',
+            'sort_by': request.form.get('sort_by', 'regular')
+        }
+        
         try:
             event_date = datetime.strptime(event_date_str, '%Y-%m-%d') if event_date_str else datetime.now()
             filename = secure_filename(file.filename)
@@ -201,7 +379,7 @@ def upload_file():
             file.save(file_path)
 
             flash('Processing your file... This may take a few minutes.')
-            header, processed_data = process_csv_file(file_path, event_date, cfc_id_column)
+            header, processed_data = process_csv_file(file_path, event_date, cfc_id_column, options)
 
             if len(processed_data) > MAX_PLAYERS_PER_FILE:
                 flash(f'File too large! Maximum {MAX_PLAYERS_PER_FILE} players allowed. Your file has {len(processed_data)} players.')
@@ -219,7 +397,8 @@ def upload_file():
                 'index.html',
                 headers=header,
                 rows=processed_data,
-                download_url=url_for('download_file', filename=output_filename)
+                download_url=url_for('download_file', filename=output_filename),
+                options=options  # Pass options back to template for display
             )
 
         except Exception as e:
